@@ -1,0 +1,62 @@
+<html>
+<head>
+	<title>CRISP Button</title>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/particle-api-js/5/particle.min.js"></script>
+	<script>
+		var particle = new Particle();
+        var sonosURL = 'http://192.168.1.129:5005/Main%20Little%201';
+        var token;
+        var volume;
+        
+        
+		particle.login({ username: 'brandonkfrye@gmail.com', password: 'crispagency' })
+			.then(function(data) {
+                token = data.body.access_token;
+                
+                particle.getEventStream({ deviceId: 'mine', auth: token }).then(function(stream) {
+                    stream.on('event', function(data) {
+                        console.log("Event: " + data.name);
+                        
+                        // volume controls
+                        $.get( sonosURL + "/state/", function( data ) {
+                            console.log( "Current Volume : " + parseInt(data.volume) );
+                            volume = data.volume;
+                            return volume;
+                        }).done (function() {
+                            if ( data.name == 'leftBtn' ) {
+                                console.log('New Volume - : ' + (volume - 5) );
+                                $.get( sonosURL + '/volume/' + (volume - 5) );
+                            }
+                            
+                            if ( data.name == 'rightBtn' ) {
+                                $.get( sonosURL + '/volume/' + (volume + 5) );
+                                console.log('New Volume + : ' + (volume + 5) );
+                            }
+                        });
+                        
+                        
+                        
+                        // play state controls
+                        if ( data.name == 'upBtn' ) {
+                            $.get( sonosURL + '/play' );
+                            console.log('Playing');
+                        }
+                        
+                        if ( data.name == 'downBtn' ) {
+                            $.get( sonosURL + '/pause' );
+                            console.log('Paused');
+                        }
+
+                    });
+                });
+                
+                
+			}, function(err) {
+				console.error(err);
+			});
+	</script>
+</body>
+</html>
